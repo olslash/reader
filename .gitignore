@@ -1,0 +1,4 @@
+.lein-repl-history
+.idea
+figwheel_server.log
+reader.iml
