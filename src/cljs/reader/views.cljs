@@ -48,8 +48,12 @@
 
          (for [f @folders]
            ^{:key (:title f)} [folder f
-                               (for [i (get f-i (:title f))]
-                                 ^{:key (:url i)} [item i])])]))))
+                               (let [current-folder (get f-i (:title f))]
+                                 (if (empty? current-folder)
+                                   [:li.empty-folder "empty folder"]
+
+                                   (for [i current-folder]
+                                     ^{:key (:url i)} [item i])))])]))))
 
 
 (defn handle-input-change [e state key]

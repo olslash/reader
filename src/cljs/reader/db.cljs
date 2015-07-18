@@ -43,4 +43,4 @@
                  :items         (sorted-map (:id hn) hn
                                             (:id l-t-a) l-t-a)
                  :folders-items {"Programming" [(:id l-t-a)]
-                                 "Something"   [(:id hn)]}})
+                                 "Something"   []}})
