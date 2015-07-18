@@ -14,20 +14,21 @@
 
 (defn make-tracked-item
   [args]
-  (map->tracked-item (merge args
-                            {:id (uuid)})))
+  (map->tracked-item (merge {:id           (uuid)
+                             :unread-count 0}
+                            args)))
 
 (defn make-folder
   [args]
-  (map->folder (merge args
-                      {:open? false})))
+  (map->folder (merge {:open? false}
+                      args)))
 
 
 
-(def hn (make-tracked-item {:title        "Hacker News"
-                            :url          "http://news.ycombinator.com"
-                            :starred?      false
-                            :unread-count 0}))
+(def hn
+  (make-tracked-item {:title        "Hacker News"
+                      :url          "http://news.ycombinator.com"
+                      :starred?     false}))
 
 (def l-t-a
   (make-tracked-item {:title        "Lambda the Ultimate"
@@ -37,7 +38,7 @@
 
 (def programming (make-folder {:title "Programming"}))
 
-(def default-db {:folders       [programming]
-                 :items         {(:id hn)    hn
-                                 (:id l-t-a) l-t-a}
-                 :folders-items {"Programming" [(:id l-t-a)]}})
+(def default-db {:folders [programming]
+                 :items   (sorted-map (:id hn) hn
+                          (:id l-t-a) l-t-a)
+                          :folders-items {"Programming" [(:id l-t-a)]}})

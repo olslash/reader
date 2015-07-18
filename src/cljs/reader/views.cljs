@@ -57,13 +57,13 @@
     (fn []
       (if (:active @state)
         [:input.add-item
-         :on-change #(handle-input-change %1 state :url)
+         {:on-change #(handle-input-change %1 state :url)
          :on-key-down #(when (= (.. %1 -keyCode) 13)
                         (do
                           (swap! state assoc :active false)
                           (re-frame/dispatch [:add-item {:url (:url @state)}])
                           (swap! state assoc :url "")))     ; clear input
-         :value (:url @state)]
+         :value (:url @state)}]
 
         [:a.add-item {:on-click  #(swap! state assoc :active true)} "Add an item"]))))
 

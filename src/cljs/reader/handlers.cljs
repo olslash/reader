@@ -15,4 +15,5 @@
 (r/register-handler
   :add-item
   (fn [db [_ item]]
-    (update db :items conj (db/make-tracked-item item))))
+    (let [item (db/make-tracked-item item)]
+      (update db :items assoc (:id item) item))))
