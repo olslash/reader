@@ -9,31 +9,42 @@
      [:span.icon.star
       {:class-name (when-not (:starred item) "hidden")} "star"]
      [:span.name (:title item)]
+     [:span.url (:url item)]
      [:span.unread-count (:unread-count item)]]))
 
 (defn folder []
   "a container for items"
-  (let []
+  (let [this (r/current-component)]
     (fn [f]
       [:li.folder
        [:span.icon.folder-open]
-       [:div.folder-header (str "FOLDER" (:title f))]])))
+       [:div.folder-header (str "FOLDER" (:title f))]
+       (into [:ul.folder-contents] (r/children this))])))
+
+(defn in-any-folder? [folders-items item-id]
+  "is the given item in any folder?"
+  (some #(some #{item-id} (:id %1)) (vals folders-items)))
 
 ; tree view should show all the folders, all their contents,
 ; and any items that aren't in a folder
-(defn tree-view []
-  (let [items   (re-frame/subscribe [:items])
-        folders (re-frame/subscribe [:folders])]
+(defn tree-view [header]
+  (let [items         (re-frame/subscribe [:items])
+        folders       (re-frame/subscribe [:folders])
+        folders-items (re-frame/subscribe [:folders-items])]
 
     (fn [header]
-      [:div
-       [:div header]
-       (for [i @items :when (empty? (:in-folders i))]
-         ^{:key (:url i)} [item i])                         ; items not in a folder
+      (let [f-i @folders-items]                             ; have to deref here?
+        [:div
+         [:div header]
+         ; items not in a folder are shown in the main list
+         (for [i (vals @items) :when (not (in-any-folder? f-i (:id i)))]
+           ^{:key (:url i)} [item i])
 
-       (for [f @folders]
-         ^{:key (:title f)} [folder f])
-       ])))
+         (for [f @folders]
+           ^{:key (:title f)} [folder f
+                               (map                         ; folder contents-- fixme?
+                                 (partial conj ^{:key (:title f)} [item])
+                                 (get f-i (:title f)))])]))))
 
 
 (defn handle-input-change [e state key]
@@ -46,13 +57,13 @@
     (fn []
       (if (:active @state)
         [:input.add-item
-         {:on-change   #(handle-input-change %1 state :url)
-          :on-key-down #(when (= (.. %1 -keyCode) 13)
-                         (do
-                           (swap! state assoc :active false)
-                           (re-frame/dispatch [:add-item {:url (:url @state)}])
-                           (swap! state assoc :url ""))) ; clear input
-          :value       (:url @state)}]
+         :on-change #(handle-input-change %1 state :url)
+         :on-key-down #(when (= (.. %1 -keyCode) 13)
+                        (do
+                          (swap! state assoc :active false)
+                          (re-frame/dispatch [:add-item {:url (:url @state)}])
+                          (swap! state assoc :url "")))     ; clear input
+         :value (:url @state)]
 
         [:a.add-item {:on-click  #(swap! state assoc :active true)} "Add an item"]))))
 

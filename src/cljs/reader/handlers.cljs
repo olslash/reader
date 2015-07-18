@@ -14,5 +14,5 @@
 
 (r/register-handler
   :add-item
-  (fn [db [_ folder]]
-    (update db :folders conj (db/make-folder folder))))
+  (fn [db [_ item]]
+    (update db :items conj (db/make-tracked-item item))))

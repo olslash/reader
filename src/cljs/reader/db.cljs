@@ -2,7 +2,7 @@
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]))
 
-(defrecord tracked-item [title url starred? unread-count in-folders])
+(defrecord tracked-item [title url starred? unread-count])
 (defrecord folder [title open?])
 
 (def uuid-counter (atom 0))
@@ -15,8 +15,7 @@
 (defn make-tracked-item
   [args]
   (map->tracked-item (merge args
-                            {:id         (uuid)
-                             :in-folders []})))
+                            {:id (uuid)})))
 
 (defn make-folder
   [args]
@@ -28,8 +27,7 @@
 (def hn (make-tracked-item {:title        "Hacker News"
                             :url          "http://news.ycombinator.com"
                             :starred?      false
-                            :unread-count 0
-                            :in-folders ["Programming"]}))
+                            :unread-count 0}))
 
 (def l-t-a
   (make-tracked-item {:title        "Lambda the Ultimate"
@@ -39,9 +37,7 @@
 
 (def programming (make-folder {:title "Programming"}))
 
-(def default-db {:folders [programming]
-                 :items   [hn l-t-a]})
-
-
-;folders must maintain order
-;folder items must maintain order
+(def default-db {:folders       [programming]
+                 :items         {(:id hn)    hn
+                                 (:id l-t-a) l-t-a}
+                 :folders-items {"Programming" [(:id l-t-a)]}})
