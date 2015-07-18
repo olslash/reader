@@ -37,8 +37,10 @@
                       :unread-count 10}))
 
 (def programming (make-folder {:title "Programming"}))
+(def something (make-folder {:title "Something"}))
 
-(def default-db {:folders [programming]
-                 :items   (sorted-map (:id hn) hn
-                                      (:id l-t-a) l-t-a)
-                          :folders-items {"Programming" [(:id l-t-a)]}})
+(def default-db {:folders       [programming something]
+                 :items         (sorted-map (:id hn) hn
+                                            (:id l-t-a) l-t-a)
+                 :folders-items {"Programming" [(:id l-t-a)]
+                                 "Something"   [(:id hn)]}})

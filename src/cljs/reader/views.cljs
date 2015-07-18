@@ -23,7 +23,12 @@
 
 (defn in-any-folder? [folders-items item-id]
   "is the given item in any folder?"
-  (some #(some #{item-id} (:id %1)) (vals folders-items)))
+  #_(print (:id (first (first (vals folders-items)))))
+  (let [folder-content-vecs (vals folders-items)]
+    (some (fn [folder]
+            (some (fn [item] (= (:id item) item-id)) folder))
+          folder-content-vecs)))
+
 
 ; tree view should show all the folders, all their contents,
 ; and any items that aren't in a folder
@@ -34,6 +39,7 @@
 
     (fn []
       (let [f-i @folders-items]                             ; have to deref here?
+        (print @folders)
         [:div
          [:div header]
          ; items not in a folder are shown in the main list

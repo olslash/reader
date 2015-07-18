@@ -22,9 +22,6 @@
   (fn [db _]
     (reaction (:folders @db))))
 
-(defn id->item [db id]
-  (get id (:items db)))
-
 (defn populate [lookup id-list]
   "for every item-id in id-list, replace it with the associated real thing in lookup (or nil)"
   (map #(get lookup %) id-list))
@@ -35,5 +32,6 @@
     (reaction
       (zipmap (keys (:folders-items @db))
               (map
-                (partial populate (:items @db))
+                (comp vec
+                      (partial populate (:items @db)))
                 (vals (:folders-items @db)))))))
