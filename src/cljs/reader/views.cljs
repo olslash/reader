@@ -32,7 +32,7 @@
         folders       (re-frame/subscribe [:folders])
         folders-items (re-frame/subscribe [:folders-items])]
 
-    (fn [header]
+    (fn []
       (let [f-i @folders-items]                             ; have to deref here?
         [:div
          [:div header]
@@ -42,9 +42,8 @@
 
          (for [f @folders]
            ^{:key (:title f)} [folder f
-                               (map                         ; folder contents-- fixme?
-                                 (partial conj ^{:key (:title f)} [item])
-                                 (get f-i (:title f)))])]))))
+                               (for [i (get f-i (:title f))]
+                                 ^{:key (:url i)} [item i])])]))))
 
 
 (defn handle-input-change [e state key]
