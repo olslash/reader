@@ -2,44 +2,53 @@
     (:require [re-frame.core :as re-frame]
               [reagent.core :as r]))
 
-(defn item []
-  "a folder item"
-  (fn [item]
-    [:li.tracked-item "ITEM"
-     [:span.icon.star
-      {:class-name (when-not (:starred item) "hidden")} "star"]
-     [:span.name (:title item)]
-     [:span.url (:url item)]
-     [:span.unread-count (:unread-count item)]]))
-
-(defn folder []
-  "a container for items"
-  (let [this (r/current-component)]
-    (fn [f]
-      [:li.folder
-       [:span.icon.folder-open]
-       [:div.folder-header (str "FOLDER" (:title f))]
-       (into [:ul.folder-contents] (r/children this))])))
+; helpers ----------------------------------------------------------
 
 (defn in-any-folder? [folders-items item-id]
   "is the given item in any folder?"
-  #_(print (:id (first (first (vals folders-items)))))
   (let [folder-content-vecs (vals folders-items)]
     (some (fn [folder]
             (some (fn [item] (= (:id item) item-id)) folder))
           folder-content-vecs)))
 
+(defn handle-input-change [e state key]
+  (swap! state assoc key (.. e -target -value)))
 
-; tree view should show all the folders, all their contents,
-; and any items that aren't in a folder
+
+; views ------------------------------------------------------------
+
+(defn item []
+  "a folder item"
+
+  (fn [item]
+    [:li.tracked-item "ITEM"
+     [:span.icon.star
+      {:class-name (when-not (:starred item) "hidden")} "star"]
+     [:span.title (:title item)]
+     [:span.url (:url item)]
+     [:span.unread-count (:unread-count item)]]))
+
+(defn folder []
+  "a container for items"
+
+  (fn [f {:keys [items]}]
+    [:li.folder
+     [:span.icon.folder-open "FOLDER"]
+     [:div.folder-header (:title f)]
+     [:ul.folder-contents (if (empty? items)
+                            [:li.empty-folder "empty folder"]
+                            (for [i items]
+                              ^{:key (:url i)} [item i]))]]))
+
 (defn tree-view [header]
+  "the tree of folders and their items"
+
   (let [items         (re-frame/subscribe [:items])
         folders       (re-frame/subscribe [:folders])
         folders-items (re-frame/subscribe [:folders-items])]
 
     (fn []
       (let [f-i @folders-items]                             ; have to deref here?
-        (print @folders)
         [:div
          [:div header]
          ; items not in a folder are shown in the main list
@@ -47,18 +56,7 @@
            ^{:key (:url i)} [item i])
 
          (for [f @folders]
-           ^{:key (:title f)} [folder f
-                               (let [current-folder (get f-i (:title f))]
-                                 (if (empty? current-folder)
-                                   [:li.empty-folder "empty folder"]
-
-                                   (for [i current-folder]
-                                     ^{:key (:url i)} [item i])))])]))))
-
-
-(defn handle-input-change [e state key]
-  (swap! state assoc key (.. e -target -value)))
-
+           ^{:key (:title f)} [folder f {:items (get f-i (:title f))}])]))))
 
 (defn add-item-button []
   (let [state (r/atom {:active false
@@ -74,8 +72,8 @@
                           (swap! state assoc :url "")))     ; clear input
          :value (:url @state)}]
 
-        [:a.add-item {:on-click  #(swap! state assoc :active true)} "Add an item"]))))
-
+        [:a.add-item {:on-click  #(swap! state assoc :active true)}
+         "Add an item"]))))
 
 (defn sidebar-view []
   [:div
@@ -86,23 +84,6 @@
 
 
 
-
-
-
-
-
-; <TreeView>
-;   <Folder name=Bikes>
-;     <Item>Red Kite Prayer</Item>
-;     <Item>Manual for Speed</Item>
-;   </Folder>
-;   <Folder name=Programming>
-;     <Item favorite=true>Hackernews</Item>
-;     <Item unread-count=20>Clojuredocs</Item>
-;     <Item unread-count=19>Github Blog</Item>
-;   </Folder>
-; </TreeView>
-
 ; <div class="folder-list"> ; folder list
 ;   <div class="folder"> ; folder component
 ;     <span class="icon folder-open"></span>
@@ -111,7 +92,7 @@
 ;     <ul class="folder-contents"> ; item component
 ;       <li class="folder-item">
 ;         <span class="icon star hidden"></span>
-;         <span class="name">Hacker News</span>
+;         <span class="title">Hacker News</span>
 ;         <span class="unread-count">20</span>
 ;       </li>
 ;     </ul>
