@@ -17,3 +17,9 @@
   (fn [db [_ item]]
     (let [item (db/make-tracked-item item)]
       (update db :items assoc (:id item) item))))
+
+(r/register-handler
+  :add-to-folder
+  (fn [db [_ folder item]]
+    (let []
+      (update-in db [:folders-items (:title folder)] conj item))))

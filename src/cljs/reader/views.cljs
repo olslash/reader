@@ -21,24 +21,62 @@
   "a folder item"
 
   (fn [item]
-    [:li.tracked-item "ITEM"
+    [:div.tracked-item {:draggable     true
+                       :on-drag-start #(.setData (.-dataTransfer %1)
+                                                 "item-id" (:id item))}
+     "ITEM"
      [:span.icon.star
       {:class-name (when-not (:starred item) "hidden")} "star"]
      [:span.title (:title item)]
      [:span.url (:url item)]
      [:span.unread-count (:unread-count item)]]))
 
+(defn separator []
+  "a separator div between items in the tree view that also acts as a visual
+  drag/drop target when reordering/moving other items"
+  (let [state (r/atom {:hovered false})]
+
+    (fn [{:keys [on-click]}]
+      (let [hovered (:hovered @state)
+            set-hovered #(swap! state assoc :hovered %)]
+        [:div.divider.drop-target
+         {:on-drag-enter #(do
+                           (.preventDefault %)
+                           (set-hovered true))
+          :on-drag-leave #(do
+                           (.preventDefault %)
+                           (set-hovered false))
+
+          :on-click        on-click
+          :on-drop       #(do
+                           (.preventDefault %)
+                           (.stopPropagation %)
+                           (set-hovered false)
+                           (print (.getData (.-dataTransfer %) "item-id")))
+          :style         {:background "blue" #_(if hovered "blue" "transparent")
+                          :opacity    (if hovered "1" ".05")
+                          :width      "100px"
+                          :height     (if hovered "30px" "5px")}}]))))
+
 (defn folder []
   "a container for items"
 
   (fn [f {:keys [items]}]
-    [:li.folder
-     [:span.icon.folder-open "FOLDER"]
-     [:div.folder-header (:title f)]
-     [:ul.folder-contents (if (empty? items)
-                            [:li.empty-folder "empty folder"]
-                            (for [i items]
-                              ^{:key (:url i)} [item i]))]]))
+    (let [separator-callback #(re-frame/dispatch [:add-to-folder f])]
+      [:li.folder {:on-drag-over #(.preventDefault %)       ; required by on-drop
+                   :on-drop      #(print (.getData (.-dataTransfer %1) "item-id"))}
+
+       [:span.icon.folder-open "FOLDER"]
+       [:div.folder-header (:title f)]
+       [:ul.folder-contents [:li.container
+                             [separator {:on-drop separator-callback}]
+
+                             (if (empty? items)
+                               [:div.empty-folder "empty folder"]
+
+                               (for [i items] ^{:key (:url i)} [item i]))
+
+                             [separator {:on-drop separator-callback}]]]])))
 
 (defn tree-view [header]
   "the tree of folders and their items"
@@ -59,17 +97,19 @@
            ^{:key (:title f)} [folder f {:items (get f-i (:title f))}])]))))
 
 (defn add-item-button []
+  "the 'add new feed' button and url input"
+
   (let [state (r/atom {:active false
                        :url ""})]
     (fn []
       (if (:active @state)
         [:input.add-item
-         {:on-change #(handle-input-change %1 state :url)
-         :on-key-down #(when (= (.. %1 -keyCode) 13)
-                        (do
-                          (swap! state assoc :active false)
-                          (re-frame/dispatch [:add-item {:url (:url @state)}])
-                          (swap! state assoc :url "")))     ; clear input
+         {:on-change   #(handle-input-change %1 state :url)
+          :on-key-down #(when (= (.. %1 -keyCode) 13)
+                         (do
+                           (swap! state assoc :active false)
+                           (re-frame/dispatch [:add-item {:url (:url @state)}])
+                           (swap! state assoc :url "")))     ; clear input
          :value (:url @state)}]
 
         [:a.add-item {:on-click  #(swap! state assoc :active true)}

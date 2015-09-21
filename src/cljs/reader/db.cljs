@@ -42,5 +42,6 @@
 (def default-db {:folders       [programming something]
                  :items         (sorted-map (:id hn) hn
                                             (:id l-t-a) l-t-a)
-                 :folders-items {"Programming" (sorted-set (:id l-t-a))
+                 :folders-items {"Programming" (sorted-set (:id l-t-a) (:id hn))
                                  "Something"   (sorted-set)}})
+

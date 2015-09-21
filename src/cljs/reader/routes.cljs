@@ -27,3 +27,13 @@
 
   ;; --------------------
   (hook-browser-navigation!))
+
+;
+;<app>
+; <sidebar> ; returns tree-view or whatever
+;
+; </sidebar>
+; <main> ; subscribes to a route dispatch
+; </main>
+;</app>
+
